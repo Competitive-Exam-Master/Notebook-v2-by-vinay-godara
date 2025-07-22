@@ -1,58 +1,70 @@
-<!-- index.html -->
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modular Text Editor</title>
   <style>
-    body, html { margin: 0; padding: 0; font-family: sans-serif; height: 100%; }
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: sans-serif;
+      background: #fafafa;
+    }
     #toolbar-wrapper {
       position: fixed;
-      bottom: env(keyboard-inset-height, 0); /* Adjust for virtual keyboard */
+      bottom: env(keyboard-inset-height, 0);
       left: 0; right: 0;
       background: #f0f0f0;
+      display: flex;
       overflow-x: auto;
       white-space: nowrap;
-      display: flex;
-      padding: 6px 0;
       border-top: 1px solid #ccc;
-      z-index: 100;
+      padding: 6px;
+      z-index: 1000;
     }
     .tool-btn {
-      display: inline-block;
-      padding: 6px 12px;
-      margin: 0 4px;
+      flex: 0 0 auto;
+      margin-right: 6px;
+      padding: 8px 12px;
       background: #fff;
       border: 1px solid #ccc;
       border-radius: 4px;
-      user-select: none;
       cursor: pointer;
-      flex: 0 0 auto;
+      user-select: none;
     }
     #editor {
+      margin-bottom: 60px;
       padding: 12px;
-      margin-bottom: 60px; /* space for toolbar */
-      min-height: 80vh;
-      overflow-y: auto;
       outline: none;
+      min-height: 80vh;
+      background: #fff;
     }
   </style>
 </head>
 <body>
+
   <div id="toolbar-wrapper"></div>
   <div id="editor" contenteditable="true">Start typing...</div>
 
   <script type="module">
-    const addonsToLoad = ['bold.js', 'italic.js']; // from /addons
+    import { enabledAddons } from './addons.js';
 
     const toolbar = document.getElementById('toolbar-wrapper');
     const editor = document.getElementById('editor');
 
     async function loadAddon(file) {
-      const { default: addon } = await import(`./addons/${file}`);
-      const btn = addon(editor);
-      toolbar.appendChild(btn);
+      try {
+        const { default: addon } = await import(`./addons/${file}`);
+        const element = addon(editor);
+        toolbar.appendChild(element);
+      } catch (e) {
+        console.error(`Addon "${file}" failed to load:`, e);
+      }
     }
 
-    addonsToLoad.forEach(loadAddon);
+    enabledAddons.forEach(loadAddon);
   </script>
 </body>
 </html>
