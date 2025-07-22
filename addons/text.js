@@ -2,15 +2,15 @@ export default function(editor) {
   const wrapper = document.createElement('div');
   let savedRange = null;
 
-  // Preserve text selection when user lifts finger/mouse
-  editor.addEventListener('mouseup', () => {
+  // Save selection when text is selected
+  const saveSelection = () => {
     const sel = window.getSelection();
     if (sel.rangeCount > 0) {
       savedRange = sel.getRangeAt(0).cloneRange();
     }
-  });
+  };
 
-  // Restore selection safely
+  // Restore selection into editor
   const restoreSelection = () => {
     if (savedRange) {
       const sel = window.getSelection();
@@ -18,6 +18,11 @@ export default function(editor) {
       sel.addRange(savedRange);
     }
   };
+
+  // Update saved range continuously on interaction
+  editor.addEventListener('mouseup', saveSelection);
+  editor.addEventListener('keyup', saveSelection);
+  editor.addEventListener('touchend', saveSelection);
 
   const mainBtn = document.createElement('button');
   mainBtn.className = 'tool-btn';
