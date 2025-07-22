@@ -1,0 +1,58 @@
+<!-- index.html -->
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body, html { margin: 0; padding: 0; font-family: sans-serif; height: 100%; }
+    #toolbar-wrapper {
+      position: fixed;
+      bottom: env(keyboard-inset-height, 0); /* Adjust for virtual keyboard */
+      left: 0; right: 0;
+      background: #f0f0f0;
+      overflow-x: auto;
+      white-space: nowrap;
+      display: flex;
+      padding: 6px 0;
+      border-top: 1px solid #ccc;
+      z-index: 100;
+    }
+    .tool-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      margin: 0 4px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      user-select: none;
+      cursor: pointer;
+      flex: 0 0 auto;
+    }
+    #editor {
+      padding: 12px;
+      margin-bottom: 60px; /* space for toolbar */
+      min-height: 80vh;
+      overflow-y: auto;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="toolbar-wrapper"></div>
+  <div id="editor" contenteditable="true">Start typing...</div>
+
+  <script type="module">
+    const addonsToLoad = ['bold.js', 'italic.js']; // from /addons
+
+    const toolbar = document.getElementById('toolbar-wrapper');
+    const editor = document.getElementById('editor');
+
+    async function loadAddon(file) {
+      const { default: addon } = await import(`./addons/${file}`);
+      const btn = addon(editor);
+      toolbar.appendChild(btn);
+    }
+
+    addonsToLoad.forEach(loadAddon);
+  </script>
+</body>
+</html>
