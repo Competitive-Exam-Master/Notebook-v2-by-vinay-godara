@@ -5,18 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Modular Text Editor</title>
   <style>
-    body, html {
+    html, body {
       margin: 0;
       padding: 0;
       height: 100%;
       font-family: sans-serif;
       background: #fafafa;
-      overflow: hidden; /* Prevent overscroll issues */
+      overflow: hidden;
     }
     #toolbar-wrapper {
-      position: fixed;
+      position: absolute;
       left: 0;
       right: 0;
+      bottom: 0; /* initial bottom position */
       background: #f0f0f0;
       display: flex;
       overflow-x: auto;
@@ -24,7 +25,7 @@
       border-top: 1px solid #ccc;
       padding: 6px;
       z-index: 1000;
-      transition: transform 0.2s ease;
+      transition: bottom 0.25s ease;
     }
     .tool-btn {
       flex: 0 0 auto;
@@ -40,7 +41,7 @@
       margin-bottom: 60px;
       padding: 12px;
       outline: none;
-      min-height: calc(100vh - 70px);
+      min-height: calc(100vh - 60px);
       background: #fff;
       overflow-y: auto;
     }
@@ -69,19 +70,23 @@
 
     enabledAddons.forEach(loadAddon);
 
-    // Ensure toolbar stays above Android keyboard
+    // Keyboard-aware repositioning
     const repositionToolbar = () => {
-      if (window.visualViewport) {
-        const offset = window.innerHeight - window.visualViewport.height;
-        toolbar.style.transform = `translateY(-${offset}px)`;
+      const vvp = window.visualViewport;
+      if (vvp) {
+        const bottomOffset = window.innerHeight - vvp.height - vvp.offsetTop;
+        toolbar.style.bottom = `${bottomOffset}px`;
+      } else {
+        toolbar.style.bottom = '0px';
       }
     };
 
     window.visualViewport?.addEventListener('resize', repositionToolbar);
+    window.visualViewport?.addEventListener('scroll', repositionToolbar);
     window.addEventListener('resize', repositionToolbar);
-    window.addEventListener('scroll', repositionToolbar);
-
+    window.addEventListener('orientationchange', repositionToolbar);
     repositionToolbar();
   </script>
+
 </body>
 </html>
