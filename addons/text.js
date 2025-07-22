@@ -2,23 +2,24 @@ export default function(editor) {
   const wrapper = document.createElement('div');
   let savedRange = null;
 
-  // Updates selection or caret range continuously
+  // 🔄 Track and update selection/caret accurately
   const updateSelection = () => {
     const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0) {
-      const range = sel.getRangeAt(0);
-      savedRange = range.cloneRange();
-    } else {
-      const range = document.createRange();
-      const node = sel.anchorNode || editor.childNodes[0] || editor;
-      const offset = sel.anchorOffset || 0;
-      try {
-        range.setStart(node, offset);
+    try {
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        savedRange = range.cloneRange();
+      } else {
+        const range = document.createRange();
+        let node = sel?.anchorNode || editor.lastChild || editor;
+        let offset = sel?.anchorOffset || node?.textContent?.length || 0;
+        range.setStart(node, Math.min(offset, node.textContent?.length || 0));
         range.collapse(true);
         savedRange = range;
-      } catch {
-        savedRange = null;
       }
+    } catch (err) {
+      savedRange = null;
+      console.warn('Unable to update selection:', err);
     }
   };
 
@@ -30,7 +31,7 @@ export default function(editor) {
     }
   };
 
-  // Track selection and cursor updates
+  // 🎯 Keep selection updated across input & focus interactions
   ['mouseup', 'keyup', 'input', 'focus', 'touchend'].forEach(evt =>
     editor.addEventListener(evt, updateSelection)
   );
