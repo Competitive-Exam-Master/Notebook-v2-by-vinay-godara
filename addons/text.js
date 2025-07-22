@@ -1,26 +1,35 @@
 export default function(editor) {
   const wrapper = document.createElement('div');
+  let savedRange = null;
+
+  // Save selection on mouseup inside editor
+  editor.addEventListener('mouseup', () => {
+    const sel = window.getSelection();
+    if (sel.rangeCount > 0) {
+      savedRange = sel.getRangeAt(0).cloneRange();
+    }
+  });
+
   const mainBtn = document.createElement('button');
   mainBtn.className = 'tool-btn';
   mainBtn.textContent = '📝 Text';
 
-  // Show submenu on main button click
-  mainBtn.onclick = () => {
+  mainBtn.onclick = (e) => {
+    e.preventDefault();
     wrapper.innerHTML = '';
     wrapper.appendChild(backBtn);
     actions.forEach(btn => wrapper.appendChild(btn));
   };
 
-  // Back button
   const backBtn = document.createElement('button');
   backBtn.className = 'tool-btn';
   backBtn.textContent = '🔙 Back';
-  backBtn.onclick = () => {
+  backBtn.onclick = (e) => {
+    e.preventDefault();
     wrapper.innerHTML = '';
     wrapper.appendChild(mainBtn);
   };
 
-  // Submenu buttons with emojis
   const actions = [
     { label: 'Bold', emoji: '🔠', cmd: 'bold' },
     { label: 'Italic', emoji: '✍️', cmd: 'italic' },
@@ -32,7 +41,16 @@ export default function(editor) {
     const btn = document.createElement('button');
     btn.className = 'tool-btn';
     btn.textContent = `${emoji} ${label}`;
-    btn.onclick = () => {
+    btn.style.touchAction = 'manipulation';
+
+    btn.onclick = (e) => {
+      e.preventDefault();
+      // Restore selection if available
+      if (savedRange) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+      }
       document.execCommand(cmd, false, value || null);
       editor.focus();
     };
