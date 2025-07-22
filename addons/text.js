@@ -2,15 +2,22 @@ export default function(editor) {
   const wrapper = document.createElement('div');
   let savedRange = null;
 
-  // Save selection when text is selected
-  const saveSelection = () => {
+  // Save selection from current cursor or highlight
+  const updateSelection = () => {
     const sel = window.getSelection();
     if (sel.rangeCount > 0) {
-      savedRange = sel.getRangeAt(0).cloneRange();
+      const range = sel.getRangeAt(0);
+      savedRange = range.cloneRange();
+    } else {
+      // Fallback for empty editor or fresh cursor insert
+      const range = document.createRange();
+      const node = editor.childNodes[0] || editor;
+      range.setStart(node, 0);
+      range.collapse(true);
+      savedRange = range;
     }
   };
 
-  // Restore selection into editor
   const restoreSelection = () => {
     if (savedRange) {
       const sel = window.getSelection();
@@ -19,10 +26,12 @@ export default function(editor) {
     }
   };
 
-  // Update saved range continuously on interaction
-  editor.addEventListener('mouseup', saveSelection);
-  editor.addEventListener('keyup', saveSelection);
-  editor.addEventListener('touchend', saveSelection);
+  // Track changes to cursor or selection
+  editor.addEventListener('mouseup', updateSelection);
+  editor.addEventListener('keyup', updateSelection);
+  editor.addEventListener('input', updateSelection);
+  editor.addEventListener('focus', updateSelection);
+  editor.addEventListener('touchend', updateSelection);
 
   const mainBtn = document.createElement('button');
   mainBtn.className = 'tool-btn';
