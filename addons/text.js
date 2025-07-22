@@ -2,7 +2,7 @@ export default function(editor) {
   const wrapper = document.createElement('div');
   let savedRange = null;
 
-  // Save selection on mouseup inside editor
+  // Preserve selection on mouseup
   editor.addEventListener('mouseup', () => {
     const sel = window.getSelection();
     if (sel.rangeCount > 0) {
@@ -13,6 +13,7 @@ export default function(editor) {
   const mainBtn = document.createElement('button');
   mainBtn.className = 'tool-btn';
   mainBtn.textContent = '📝 Text';
+  mainBtn.style.touchAction = 'manipulation';
 
   mainBtn.onclick = (e) => {
     e.preventDefault();
@@ -24,6 +25,8 @@ export default function(editor) {
   const backBtn = document.createElement('button');
   backBtn.className = 'tool-btn';
   backBtn.textContent = '🔙 Back';
+  backBtn.style.touchAction = 'manipulation';
+
   backBtn.onclick = (e) => {
     e.preventDefault();
     wrapper.innerHTML = '';
@@ -45,7 +48,6 @@ export default function(editor) {
 
     btn.onclick = (e) => {
       e.preventDefault();
-      // Restore selection if available
       if (savedRange) {
         const sel = window.getSelection();
         sel.removeAllRanges();
@@ -54,6 +56,7 @@ export default function(editor) {
       document.execCommand(cmd, false, value || null);
       editor.focus();
     };
+
     return btn;
   });
 
