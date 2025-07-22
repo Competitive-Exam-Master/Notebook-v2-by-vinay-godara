@@ -2,38 +2,61 @@ export default function(editor) {
   const wrapper = document.createElement('div');
   let savedRange = null;
 
-  // 🔄 Track and update selection/caret accurately
+  // Inline logging panel
+  const debug = document.createElement('div');
+  debug.id = 'debug-console';
+  debug.style.position = 'fixed';
+  debug.style.bottom = '65px';
+  debug.style.left = '0';
+  debug.style.width = '100%';
+  debug.style.maxHeight = '120px';
+  debug.style.overflowY = 'auto';
+  debug.style.fontSize = '12px';
+  debug.style.fontFamily = 'monospace';
+  debug.style.background = '#222';
+  debug.style.color = '#0f0';
+  debug.style.padding = '6px';
+  debug.style.zIndex = 9999;
+  document.body.appendChild(debug);
+
+  const log = (msg) => {
+    console.log(msg);
+    debug.innerHTML += `<div>${msg}</div>`;
+    debug.scrollTop = debug.scrollHeight;
+  };
+
+  // Selection tracking
   const updateSelection = () => {
     const sel = window.getSelection();
-    try {
-      if (sel && sel.rangeCount > 0) {
-        const range = sel.getRangeAt(0);
-        savedRange = range.cloneRange();
-      } else {
-        const range = document.createRange();
-        let node = sel?.anchorNode || editor.lastChild || editor;
-        let offset = sel?.anchorOffset || node?.textContent?.length || 0;
-        range.setStart(node, Math.min(offset, node.textContent?.length || 0));
-        range.collapse(true);
-        savedRange = range;
-      }
-    } catch (err) {
-      savedRange = null;
-      console.warn('Unable to update selection:', err);
+    if (sel && sel.rangeCount > 0) {
+      savedRange = sel.getRangeAt(0).cloneRange();
+      log('✅ Selection saved.');
+    } else {
+      log('⚠️ No selection available.');
     }
   };
 
   const restoreSelection = () => {
-    if (savedRange) {
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(savedRange);
+    try {
+      if (savedRange) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+        log('🔄 Selection restored.');
+      } else {
+        throw new Error('❌ savedRange is null. Cannot restore selection.');
+      }
+    } catch (err) {
+      console.error(err);
+      log(`💥 Error restoring selection: ${err.message}`);
     }
   };
 
-  // 🎯 Keep selection updated across input & focus interactions
   ['mouseup', 'keyup', 'input', 'focus', 'touchend'].forEach(evt =>
-    editor.addEventListener(evt, updateSelection)
+    editor.addEventListener(evt, () => {
+      log(`🕵️ Event: ${evt}`);
+      updateSelection();
+    })
   );
 
   const mainBtn = document.createElement('button');
@@ -43,6 +66,7 @@ export default function(editor) {
 
   mainBtn.addEventListener('mousedown', (e) => {
     e.preventDefault();
+    log('🔘 Main button pressed.');
     restoreSelection();
     wrapper.innerHTML = '';
     wrapper.appendChild(backBtn);
@@ -57,6 +81,7 @@ export default function(editor) {
 
   backBtn.addEventListener('mousedown', (e) => {
     e.preventDefault();
+    log('🔘 Back button pressed.');
     restoreSelection();
     wrapper.innerHTML = '';
     wrapper.appendChild(mainBtn);
@@ -78,8 +103,16 @@ export default function(editor) {
 
     btn.addEventListener('mousedown', (e) => {
       e.preventDefault();
-      restoreSelection();
-      document.execCommand(cmd, false, value || null);
+      log(`🧩 ${label} button pressed.`);
+      try {
+        restoreSelection();
+        const success = document.execCommand(cmd, false, value || null);
+        if (!success) throw new Error(`execCommand "${cmd}" failed.`);
+        log(`✅ Command executed: ${cmd}`);
+      } catch (err) {
+        console.error(err);
+        log(`💥 Error executing command: ${err.message}`);
+      }
       setTimeout(() => editor.focus({ preventScroll: true }), 0);
     });
 
