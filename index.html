@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-store" />
   <title>Modular Text Editor</title>
   <style>
     html, body {
@@ -17,7 +18,7 @@
       position: absolute;
       left: 0;
       right: 0;
-      bottom: 0; /* initial bottom position */
+      bottom: 0;
       background: #f0f0f0;
       display: flex;
       overflow-x: auto;
@@ -36,6 +37,7 @@
       border-radius: 4px;
       cursor: pointer;
       user-select: none;
+      touch-action: manipulation;
     }
     #editor {
       margin-bottom: 60px;
@@ -53,14 +55,15 @@
   <div id="editor" contenteditable="true">Start typing...</div>
 
   <script type="module">
-    import { enabledAddons } from './addons.js';
+    import { enabledAddons } from './addons.js?v=1.0';
 
     const toolbar = document.getElementById('toolbar-wrapper');
     const editor = document.getElementById('editor');
 
     async function loadAddon(file) {
       try {
-        const { default: addon } = await import(`./addons/${file}`);
+        const versionedPath = `./addons/${file}?v=1.0`;
+        const { default: addon } = await import(versionedPath);
         const element = addon(editor);
         toolbar.appendChild(element);
       } catch (e) {
@@ -70,7 +73,6 @@
 
     enabledAddons.forEach(loadAddon);
 
-    // Keyboard-aware repositioning
     const repositionToolbar = () => {
       const vvp = window.visualViewport;
       if (vvp) {
