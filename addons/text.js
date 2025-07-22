@@ -2,7 +2,7 @@ export default function(editor) {
   const wrapper = document.createElement('div');
   let savedRange = null;
 
-  // Preserve selection on mouseup
+  // Preserve text selection when user lifts finger/mouse
   editor.addEventListener('mouseup', () => {
     const sel = window.getSelection();
     if (sel.rangeCount > 0) {
@@ -10,28 +10,41 @@ export default function(editor) {
     }
   });
 
+  // Restore selection safely
+  const restoreSelection = () => {
+    if (savedRange) {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(savedRange);
+    }
+  };
+
   const mainBtn = document.createElement('button');
   mainBtn.className = 'tool-btn';
   mainBtn.textContent = '📝 Text';
   mainBtn.style.touchAction = 'manipulation';
 
-  mainBtn.onclick = (e) => {
+  mainBtn.addEventListener('mousedown', (e) => {
     e.preventDefault();
+    restoreSelection();
     wrapper.innerHTML = '';
     wrapper.appendChild(backBtn);
     actions.forEach(btn => wrapper.appendChild(btn));
-  };
+    setTimeout(() => editor.focus({ preventScroll: true }), 0);
+  });
 
   const backBtn = document.createElement('button');
   backBtn.className = 'tool-btn';
   backBtn.textContent = '🔙 Back';
   backBtn.style.touchAction = 'manipulation';
 
-  backBtn.onclick = (e) => {
+  backBtn.addEventListener('mousedown', (e) => {
     e.preventDefault();
+    restoreSelection();
     wrapper.innerHTML = '';
     wrapper.appendChild(mainBtn);
-  };
+    setTimeout(() => editor.focus({ preventScroll: true }), 0);
+  });
 
   const actions = [
     { label: 'Bold', emoji: '🔠', cmd: 'bold' },
@@ -46,16 +59,12 @@ export default function(editor) {
     btn.textContent = `${emoji} ${label}`;
     btn.style.touchAction = 'manipulation';
 
-    btn.onclick = (e) => {
+    btn.addEventListener('mousedown', (e) => {
       e.preventDefault();
-      if (savedRange) {
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(savedRange);
-      }
+      restoreSelection();
       document.execCommand(cmd, false, value || null);
-      editor.focus();
-    };
+      setTimeout(() => editor.focus({ preventScroll: true }), 0);
+    });
 
     return btn;
   });
