@@ -2,19 +2,23 @@ export default function(editor) {
   const wrapper = document.createElement('div');
   let savedRange = null;
 
-  // Save selection from current cursor or highlight
+  // Updates selection or caret range continuously
   const updateSelection = () => {
     const sel = window.getSelection();
-    if (sel.rangeCount > 0) {
+    if (sel && sel.rangeCount > 0) {
       const range = sel.getRangeAt(0);
       savedRange = range.cloneRange();
     } else {
-      // Fallback for empty editor or fresh cursor insert
       const range = document.createRange();
-      const node = editor.childNodes[0] || editor;
-      range.setStart(node, 0);
-      range.collapse(true);
-      savedRange = range;
+      const node = sel.anchorNode || editor.childNodes[0] || editor;
+      const offset = sel.anchorOffset || 0;
+      try {
+        range.setStart(node, offset);
+        range.collapse(true);
+        savedRange = range;
+      } catch {
+        savedRange = null;
+      }
     }
   };
 
@@ -26,12 +30,10 @@ export default function(editor) {
     }
   };
 
-  // Track changes to cursor or selection
-  editor.addEventListener('mouseup', updateSelection);
-  editor.addEventListener('keyup', updateSelection);
-  editor.addEventListener('input', updateSelection);
-  editor.addEventListener('focus', updateSelection);
-  editor.addEventListener('touchend', updateSelection);
+  // Track selection and cursor updates
+  ['mouseup', 'keyup', 'input', 'focus', 'touchend'].forEach(evt =>
+    editor.addEventListener(evt, updateSelection)
+  );
 
   const mainBtn = document.createElement('button');
   mainBtn.className = 'tool-btn';
